@@ -1,0 +1,10 @@
+Strategies {
+    everyHour : "0 0 * * * ?"
+    everyDay  : "0 0 0 * * ?"
+    everyMinute : "0 * * * * ?"
+    default = everyChange,everyUpdate
+}
+
+Items {
+    Motion_Sensor_Bedroom1,Door_Sensor_Bedroom1,CPressure_Arduino_Bedroom1,CLedDoor_Arduino_Bedroom1,Motion_Sensor_Bedroom2,Door_Sensor_Bedroom2,CLedDoor_Arduino_Bedroom2,Motion_Sensor_Hallway,CPressure_Arduino_Hallway,CPressure_Arduino_Kitchen,CUltrasonic_Arduino_Bathroom,Door_Sensor_Kitchen_Ref,Activity,ActivityBedroom1,ActivityBedroom2,ActivityHallway,ActivityBathroom,ActivityKitchen: strategy = everyChange,everyUpdate,everyMinute,restoreOnStartup
+}	

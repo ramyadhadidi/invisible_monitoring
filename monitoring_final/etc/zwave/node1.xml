@@ -1,0 +1,35 @@
+<node>
+  <deviceClass>
+    <basicDeviceClass>STATIC_CONTROLLER</basicDeviceClass>
+    <genericDeviceClass>STATIC_CONTOLLER</genericDeviceClass>
+    <specificDeviceClass>PC_CONTROLLER</specificDeviceClass>
+  </deviceClass>
+  <homeId>21815237</homeId>
+  <nodeId>1</nodeId>
+  <version>3</version>
+  <manufacturer>0x86</manufacturer>
+  <deviceId>0x1</deviceId>
+  <deviceType>0x2</deviceType>
+  <listening>true</listening>
+  <frequentlyListening>false</frequentlyListening>
+  <routing>false</routing>
+  <healState>FAILED during UPDATENEIGHBORS @ 2014-11-04T02:21:35+0000</healState>
+  <supportedCommandClasses>
+    <entry>
+      <commandClass>NO_OPERATION</commandClass>
+      <noOperationCommandClass>
+        <version>0</version>
+        <instances>0</instances>
+      </noOperationCommandClass>
+    </entry>
+    <entry>
+      <commandClass>BASIC</commandClass>
+      <basicCommandClass>
+        <version>0</version>
+        <instances>0</instances>
+      </basicCommandClass>
+    </entry>
+  </supportedCommandClasses>
+  <nodeNeighbors/>
+  <lastUpdated>2014-11-04 02:21:35.373 UTC</lastUpdated>
+</node>

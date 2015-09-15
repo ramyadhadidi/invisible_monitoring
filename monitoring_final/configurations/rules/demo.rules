@@ -1,0 +1,499 @@
+import org.openhab.core.library.types.*
+import org.openhab.core.persistence.*
+import org.openhab.model.script.actions.*
+import org.openhab.core.library.types.DecimalType
+
+var String[] buffer
+var String[] linebuffer
+
+/*StartUp */
+rule Startup
+when 
+    System started
+then
+	sendCommand(flag_hallway, OFF)
+	sendCommand(flag_bedroom1, OFF)
+	sendCommand(flag_bedroom2, OFF)
+	sendCommand(flag_bathroom, OFF)	
+	sendCommand(flag_kitchen, OFF)  
+//	sendCommand(CTV_Arduino_Bedroom1,OFF)  
+	sendCommand(CPressure_Arduino_Bedroom1,CLOSED)  
+//	sendCommand(CPressure_Arduino_Bedroom2,CLOSED)
+	sendCommand(CPressure_Arduino_Kitchen,CLOSED)
+	sendCommand(CPressure_Arduino_Hallway,CLOSED)
+	sendCommand(CLedDoor_Arduino_Bedroom1,CLOSED)  	  	  	  
+	sendCommand(CLedDoor_Arduino_Bedroom2,CLOSED)  	  	  	  
+	sendCommand(CUltrasonic_Arduino_Bathroom,OFF)  	 
+    sendCommand(ActivityBedroom1, CLOSED)
+    sendCommand(ActivityBedroom2, CLOSED)
+    sendCommand(ActivityHallway, CLOSED)
+    sendCommand(ActivityBathroom, CLOSED)
+    sendCommand(ActivityKitchen, CLOSED)	  	  
+    sendCommand(LastDoorKitchenValue,CLOSED)
+    sendCommand(LastDoorBedroom2Value,OPEN)
+    sendCommand(LastDoorBedroom1Value,OPEN)    
+end
+
+/* */
+rule "Update max and min temperatures"
+when
+	Item Weather_Temperature changed or
+	Time cron "0 0 0 * * ?" or
+	System started
+then	
+
+	postUpdate(Weather_Temp_Max, Weather_Temperature.maximumSince(now.toDateMidnight).state)
+
+	postUpdate(Weather_Temp_Min, Weather_Temperature.minimumSince(now.toDateMidnight).state)
+
+end
+
+/** shows how to use sensor values from the past */
+
+rule "Persistence Demo"
+when
+	Time cron "0 * * * * ?"
+then	
+	if(Weather_Temperature.changedSince(now.minusMinutes(1))) {
+		println("2 minutes ago, the temperature was " + Weather_Temperature.historicState(now.minusMinutes(2)) + " degrees.")		
+	}
+end
+
+/** 
+ * shows how to check recent switch states - very helpful to avoid executing something too often, just
+ * because somebody presses a button too often (e.g. sending a notification, if the doorbell button is pressed)
+ */
+// Creates an item that stores the last update time of this item
+
+rule "Records last weather update time"
+when
+  Item Weather_Temperature received update
+then
+  postUpdate(Weather_LastUpdate, new DateTimeType())
+end
+
+/*Room Rules*/
+/** Bedroom 1 Flag */
+rule "Bedroom 1 Flag activity"
+when
+       Item flag_bedroom1 changed from OFF to ON or
+       Time cron "*/30 * * * * ?" 
+then
+		if(ActivityBedroom1.state == OPEN){
+			postUpdate(LastActivityDate, new DateTimeType())		
+		}
+    	if(Motion_Sensor_Bedroom1.state == OPEN) {
+    		sendCommand(ActivityBedroom1,OPEN)
+    		postUpdate(LastActivityDate, new DateTimeType())		
+		logDebug("Demo.rules","Hello Motion Sensor")
+    	}
+    	else if (Door_Sensor_Bedroom1.state != LastDoorBedroom1Value.state) {
+    		postUpdate(LastActivityDate, new DateTimeType())		
+    		sendCommand(ActivityBedroom1,OPEN)
+    		postUpdate(LastDoorBedroom1Value,Door_Sensor_Bedroom1.state)
+    	}
+    	else if (CPressure_Arduino_Bedroom1.state == OPEN) {
+    		postUpdate(LastActivityDate, new DateTimeType())		
+    		sendCommand(ActivityBedroom1,OPEN)
+    	}
+    	else if (CLedDoor_Arduino_Bedroom2.state == OPEN) {
+    		postUpdate(LastActivityDate, new DateTimeType())		
+    		sendCommand(ActivityBedroom1,OPEN)
+    	}  
+    	else {
+    		sendCommand(ActivityBedroom1,CLOSED)
+    	}  
+    	
+        sendCommand(flag_bedroom1,OFF)
+
+end
+
+    	/*else if (CTV_Arduino_Bedroom1.state == OPEN) {
+    		sendCommand(ActivityBedroom1,OPEN)
+    	}*/
+
+
+/** Bedroom 2 Flag */
+rule "Bedroom 2 Flag activity"
+when
+        Item flag_bedroom2 changed from OFF to ON or
+        Time cron "*/30 * * * * ?"
+then
+		if(ActivityBedroom2.state == OPEN){
+			postUpdate(LastActivityDate, new DateTimeType())		
+		}
+    	if(Motion_Sensor_Bedroom2.state == OPEN) {
+    		postUpdate(LastActivityDate, new DateTimeType())		
+    		sendCommand(ActivityBedroom2,OPEN)
+    	}
+    	else if (Door_Sensor_Bedroom2.state != LastDoorBedroom2Value.state) {
+    		postUpdate(LastActivityDate, new DateTimeType())		 
+       		sendCommand(ActivityBedroom2,OPEN)
+    		postUpdate(LastDoorBedroom2Value,Door_Sensor_Bedroom2.state)
+    	}
+/*    	else if (CPressure_Arduino_Bedroom2.state == OPEN) {
+    		sendCommand(ActivityBedroom2,OPEN)
+    	}*/
+    	else if (CLedDoor_Arduino_Bedroom1.state == OPEN) {
+    		postUpdate(LastActivityDate, new DateTimeType())		
+    		sendCommand(ActivityBedroom2,OPEN)
+    	}  
+    	else {
+    		sendCommand(ActivityBedroom2,CLOSED)
+    	}  
+    	
+        sendCommand(flag_bedroom2,OFF)
+end
+
+/** Hallway Flag */
+rule "Hallway Flag activity"
+when
+        Item flag_hallway changed from OFF to ON or
+        Time cron "*/30 * * * * ?"        
+then
+		if(ActivityHallway.state == OPEN){
+			postUpdate(LastActivityDate, new DateTimeType())		
+		}
+    	if(Motion_Sensor_Hallway.state == OPEN) {
+		    postUpdate(LastActivityDate, new DateTimeType())		
+    		sendCommand(ActivityHallway,OPEN)
+    	}
+    	else if (CPressure_Arduino_Hallway.state == OPEN) {
+    		postUpdate(LastActivityDate, new DateTimeType())		
+    		sendCommand(ActivityHallway,OPEN)
+    	}
+    	else {
+    		sendCommand(ActivityHallway,CLOSED)
+    	}  
+    	
+        sendCommand(flag_hallway,OFF)
+end
+
+/** Bathroom Flag */
+rule "Bathroom Flag activity"
+when
+    Item flag_bathroom changed from OFF to ON  or
+    Time cron "*/30 * * * * ?"
+then
+/*    	if(Motion_Sensor_Bathroom.state == OPEN) {
+		sendCommand(ActivityBathroom,OPEN)
+	}
+	else if (Door_Sensor_Bathroom.state == OPEN) {
+		sendCommand(ActivityBathroom,OPEN)
+	}*/
+	if(ActivityBathroom.state == OPEN){
+		postUpdate(LastActivityDate, new DateTimeType())		
+	}    	
+	if (CUltrasonic_Arduino_Bathroom.state == OPEN) {
+		postUpdate(LastActivityDate, new DateTimeType())		
+		sendCommand(ActivityBathroom,OPEN)
+	}  
+	else {
+		sendCommand(ActivityBathroom,CLOSED)
+	}  
+    sendCommand(flag_bathroom,OFF)
+end
+
+/** Kitchen Flag */
+rule "Kitchen Flag activity"
+when
+    Item flag_kitchen changed from OFF to ON or
+    Time cron "*/30 * * * * ?"
+then
+	if(ActivityKitchen.state == OPEN){
+		postUpdate(LastActivityDate, new DateTimeType())		
+	}
+	if (Door_Sensor_Kitchen_Ref.state != LastDoorKitchenValue.state) {
+    		postUpdate(LastActivityDate, new DateTimeType())		
+    		sendCommand(ActivityKitchen,OPEN)
+    		postUpdate(LastDoorKitchenValue,Door_Sensor_Kitchen_Ref.state)
+  	}  
+	else if(CPressure_Arduino_Kitchen.state == OPEN){
+		postUpdate(LastActivityDate, new DateTimeType())		
+		sendCommand(ActivityKitchen,OPEN)
+	}
+    else {
+    	sendCommand(ActivityKitchen,CLOSED)
+    }  
+    sendCommand(flag_kitchen,OFF)
+end
+
+/*Zwave Rules */
+/**Bedroom1 */
+rule "Bedroom 1 Motion Sensor"
+when
+        Item Motion_Sensor_Bedroom1 received update
+then
+        if(Motion_Sensor_Bedroom1.state == CLOSED){
+                sendCommand(LBedroom1, OFF)        	        	
+                sendCommand(flag_bedroom1,ON)
+        }
+        else{
+                sendCommand(LBedroom1, ON)        	        	
+                sendCommand(flag_bedroom1,ON)
+        }
+end
+
+rule "Bedroom 1 Door Sensor"
+when
+        Item Door_Sensor_Bedroom1 received update
+then
+        if(Door_Sensor_Bedroom1.state == CLOSED){
+                sendCommand(flag_bedroom1,ON)
+        }
+        else{
+                sendCommand(flag_bedroom1,ON)
+        }
+end
+
+/**Bedroom2 */
+rule "Bedroom 2 Motion Sensor"
+when
+        Item Motion_Sensor_Bedroom2 received update
+then
+        if(Motion_Sensor_Bedroom2.state == CLOSED){
+                sendCommand(LBedroom2, OFF)        	
+                sendCommand(flag_bedroom2,ON)
+        }
+        else{
+                sendCommand(LBedroom2, ON)        	        	
+                sendCommand(flag_bedroom2,ON)
+        }
+end
+
+rule "Bedroom 2 Door Sensor"
+when
+        Item Door_Sensor_Bedroom2 received update
+then
+        if(Door_Sensor_Bedroom2.state == CLOSED){
+                sendCommand(flag_bedroom2,ON)
+        }
+        else{
+                sendCommand(flag_bedroom2,ON)
+        }
+end
+
+/**Kitchen */
+
+rule "Kitchen Refrigerator Door Sensor"
+when
+        Item Door_Sensor_Kitchen_Ref received update
+then
+        if(Door_Sensor_Kitchen_Ref.state == CLOSED){
+                sendCommand(flag_kitchen,ON)
+        }
+        else{
+                sendCommand(flag_kitchen,ON)
+        }
+end
+
+/**Hallway */
+rule "Hallway Motion Sensor"
+when
+        Item Motion_Sensor_Hallway received update
+then
+        if(Motion_Sensor_Hallway.state == CLOSED){
+                sendCommand(LHallway, OFF)
+                sendCommand(flag_hallway,ON)
+        }
+        else{
+                sendCommand(LHallway,ON)
+                sendCommand(flag_hallway,ON)
+        }
+end
+
+/**Bathroom */
+/*rule "Bathroom Motion Sensor"
+when
+        Item Motion_Sensor_Bathroom received update
+then
+        if(Motion_Sensor_Bathroom.state == CLOSED){
+                sendCommand(flag_bathroom,ON)
+        }
+        else{
+                sendCommand(flag_bathroom,ON)
+        }
+end*/
+
+/*rule "Bathroom Door Sensor"
+when
+        Item Door_Sensor_Bathroom received update
+then
+        if(Door_Sensor_Bathroom.state == CLOSED){
+                sendCommand(flag_bathroom,ON)
+        }
+        else{
+                sendCommand(flag_bathroom,ON)
+        }
+end*/
+/**Kitchen */
+
+
+/*  Arduino Rules */
+/** Coordinator */
+rule "Arduino Coordinator"
+when
+  Item ArduinoCoordinator received update 
+then
+  linebuffer= ArduinoCoordinator.state.toString.split("\n")
+  for(String element: linebuffer){
+    buffer= element.split("~")
+	/* if(buffer.get(0)=="1"){
+     postUpdate (STV_Arduino_Bedroom1, buffer.get(1))
+  	}*/
+    if(buffer.get(0)=="4"){
+  	  postUpdate (SPressure_Arduino_Bedroom1, buffer.get(1)) 	
+  	}
+  	else if(buffer.get(0)=="3"){
+    	postUpdate (SLedDoor_Arduino_Bedroom1, buffer.get(1)) 	
+  	}
+	  /*else if(buffer.get(0)=="2"){
+    	postUpdate (SPressure_Arduino_Bedroom2, buffer.get(1)) 	
+  	}*/
+  	else if(buffer.get(0)=="5"){
+    	postUpdate (SLedDoor_Arduino_Bedroom2, buffer.get(1)) 	
+  	}
+  	else if(buffer.get(0)=="6"){
+    	postUpdate (SPressure_Arduino_Hallway, buffer.get(1)) 	
+  	}
+  	else if(buffer.get(0)=="7"){
+    	postUpdate (SPressure_Arduino_Kitchen, buffer.get(1)) 	
+  	}
+  	else if(buffer.get(0)=="8"){
+   		postUpdate (SUltrasonic_Arduino_Bathroom, buffer.get(1)) 	
+  	}
+  	else{
+		println("Error!!! Not a valid arduino node number")		
+  	}
+  }
+end
+
+/** String Slaves */
+/*** Bedroom 1 */
+/*rule "Bedroom 1 TV Sensor "
+when
+        Item STV_Arduino_Bedroom1 received update
+then
+        if(STV_Arduino_Bedroom1.state.toString.trim.contains("ON"))  {
+                sendCommand(CTV_Arduino_Bedroom1,OPEN)
+                sendCommand(flag_bedroom1,ON)
+        } 
+        else{
+                sendCommand(CTV_Arduino_Bedroom1,CLOSED)
+        }
+end*/
+
+rule "Bedroom 1 Pressure Sensor "
+when
+        Item SPressure_Arduino_Bedroom1 received update
+then
+        if(SPressure_Arduino_Bedroom1.state.toString.trim.contains("ON")){
+                sendCommand(CPressure_Arduino_Bedroom1,OPEN)
+                sendCommand(flag_bedroom1,ON)
+        }
+        else{
+                if(CPressure_Arduino_Bedroom1.state == ON){
+                	sendCommand(flag_bedroom1,ON)
+                }
+                sendCommand(CPressure_Arduino_Bedroom1,CLOSED)
+        }
+end
+
+rule "Bedroom 1 Led Door Sensor "
+when
+        Item SLedDoor_Arduino_Bedroom1 received update
+then
+        if(SLedDoor_Arduino_Bedroom1.state.toString.trim.contains("ON")){
+                sendCommand(CLedDoor_Arduino_Bedroom1,OPEN)
+                sendCommand(flag_bedroom1,ON)
+        }
+        else{
+                if(CLedDoor_Arduino_Bedroom1.state == ON){
+                	sendCommand(flag_bedroom1,ON)
+                }
+                sendCommand(CLedDoor_Arduino_Bedroom1,CLOSED)
+        }
+end
+
+/** Bedroom 2 */
+/*rule "Bedroom 2 Pressure Sensor "
+when
+        Item SPressure_Arduino_Bedroom2 received update
+then
+        if(SPressure_Arduino_Bedroom2.state.toString.trim.contains("ON")){
+                sendCommand(CPressure_Arduino_Bedroom2,OPEN)
+                sendCommand(flag_bedroom2,ON)
+        }
+        else{
+                if(CPressure_Arduino_Bedroom2.state == ON){
+                	sendCommand(flag_bedroom2,ON)
+                }
+                sendCommand(CPressure_Arduino_Bedroom2,CLOSED)
+        }
+end*/
+
+rule "Bedroom 2 Led Door Sensor "
+when
+        Item SLedDoor_Arduino_Bedroom2 received update
+then
+        if(SLedDoor_Arduino_Bedroom2.state.toString.trim.contains("ON")){
+                sendCommand(CLedDoor_Arduino_Bedroom2,OPEN)
+                sendCommand(flag_bedroom2,ON)
+        }
+        else{
+                if(CLedDoor_Arduino_Bedroom2.state == ON){
+                	sendCommand(flag_bedroom2,ON)
+                }
+                sendCommand(CLedDoor_Arduino_Bedroom2,CLOSED)
+        }
+end
+
+/** Hallway */
+rule "Hallway Pressure Sensor "
+when
+        Item SPressure_Arduino_Hallway received update
+then
+        if(SPressure_Arduino_Hallway.state.toString.trim.contains("ON")){
+                sendCommand(CPressure_Arduino_Hallway,OPEN)
+                sendCommand(flag_hallway,ON)
+        }
+        else{
+                if(CPressure_Arduino_Hallway.state == ON){
+                	sendCommand(flag_hallway,ON)
+                }
+                sendCommand(CPressure_Arduino_Hallway,CLOSED)
+        }
+end
+
+/** Bathroom */
+rule "Kitchen Pressure Sensor "
+when
+        Item SPressure_Arduino_Kitchen received update
+then
+        if(SPressure_Arduino_Kitchen.state.toString.trim.contains("ON")){
+                sendCommand(CPressure_Arduino_Kitchen,OPEN)
+                sendCommand(flag_kitchen,ON)
+        }
+        else{
+                if(CPressure_Arduino_Kitchen.state == ON){
+                	sendCommand(flag_kitchen,ON)
+                }
+                sendCommand(CPressure_Arduino_Kitchen,CLOSED)
+        }
+end
+
+rule "Bathroom Led Door Sensor "
+when
+        Item SUltrasonic_Arduino_Bathroom received update
+then
+        if(SUltrasonic_Arduino_Bathroom.state.toString.trim.contains("ON")){
+                sendCommand(CUltrasonic_Arduino_Bathroom,OPEN)
+                sendCommand(flag_bathroom,ON)
+        }
+        else{
+                if(CUltrasonic_Arduino_Bathroom.state == ON){
+                	sendCommand(flag_bathroom,ON)
+                }
+                sendCommand(CUltrasonic_Arduino_Bathroom,CLOSED)
+        }
+end

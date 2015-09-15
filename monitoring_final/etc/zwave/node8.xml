@@ -1,0 +1,42 @@
+<node>
+  <deviceClass>
+    <basicDeviceClass>ROUTING_SLAVE</basicDeviceClass>
+    <genericDeviceClass>BINARY_SWITCH</genericDeviceClass>
+    <specificDeviceClass>POWER_SWITCH_BINARY</specificDeviceClass>
+  </deviceClass>
+  <homeId>21815237</homeId>
+  <nodeId>8</nodeId>
+  <version>3</version>
+  <manufacturer>0x7fffffff</manufacturer>
+  <deviceId>0x7fffffff</deviceId>
+  <deviceType>0x7fffffff</deviceType>
+  <listening>true</listening>
+  <frequentlyListening>false</frequentlyListening>
+  <routing>true</routing>
+  <healState>FAILED during UPDATENEIGHBORS @ 2014-12-05T14:34:23+0000</healState>
+  <supportedCommandClasses>
+    <entry>
+      <commandClass>NO_OPERATION</commandClass>
+      <noOperationCommandClass>
+        <version>0</version>
+        <instances>0</instances>
+      </noOperationCommandClass>
+    </entry>
+    <entry>
+      <commandClass>SWITCH_BINARY</commandClass>
+      <binarySwitchCommandClass>
+        <version>0</version>
+        <instances>0</instances>
+      </binarySwitchCommandClass>
+    </entry>
+    <entry>
+      <commandClass>BASIC</commandClass>
+      <basicCommandClass>
+        <version>0</version>
+        <instances>0</instances>
+      </basicCommandClass>
+    </entry>
+  </supportedCommandClasses>
+  <nodeNeighbors/>
+  <lastUpdated>2014-12-05 14:34:23.34 UTC</lastUpdated>
+</node>

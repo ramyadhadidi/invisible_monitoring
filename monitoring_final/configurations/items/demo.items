@@ -1,0 +1,150 @@
+Group All
+
+/* Global control */
+Group Lights "Light Control" <light>
+Group:Number:AVG  Temperature	"Avg. Room Temperature [%.1f °F]" 	<temperature>	(Status)
+
+/*  Information about rooms */
+Group Bedroom1		"Bedroom 1"	<bedroom>		(All,Rooms)
+Group Bedroom2		"Bedroom 2"		<bedroom>	(All,Rooms)
+Group Hallway		"Hallway"		<corridor>	(All,Rooms)
+Group Bathroom 		"Bathroom"	<bath>	(All,Rooms)
+Group Kitchen 		"Kitchen" <kitchen>	(All,Rooms)
+Group Rooms 		"Ground Floor"  <groundfloor>
+/* Sensors */
+Group Sensors 	"Sensors" 
+Group Zwave		"Zwave"	(Sensors)
+Group Arduino	"Arduino" (Sensors)
+Group Charts	"My Charts" (All)
+Group Slave 	(All)
+
+/* Activity */
+Group:Contact:OR(OPEN, CLOSED) GlobalActivity 	"Activity [(%d)]"	<siren>	
+Group:Contact:OR(OPEN, CLOSED) ActivityBR1 	"Activity Bedroom 1" <siren>	(GlobalActivity)
+Group:Contact:OR(OPEN, CLOSED) ActivityBR2 	"Activity Bedroom 2" <siren>	(GlobalActivity)
+Group:Contact:OR(OPEN, CLOSED) ActivityBath 	"Activity Bathroom" <siren>	(GlobalActivity)
+Group:Contact:OR(OPEN, CLOSED) ActivityH 	"Activity Hallway" <siren>	(GlobalActivity)
+Group:Contact:OR(OPEN, CLOSED) ActivityK 	"Activity Kitchen" <siren>	(GlobalActivity)
+
+/*Activity Variables by hand*/
+Group:Contact:OR(OPEN, CLOSED) Activity "Activity" <present>
+Contact ActivityBedroom1 "Bedroom 1 Activity [MAP(activity.map):%s]" <present> (Activity) 
+Contact ActivityBedroom2 "Bedroom 2 Activity [MAP(activity.map):%s]" <present> (Activity)
+Contact ActivityHallway "Hallway Activity [MAP(activity.map):%s]" <present> (Activity)
+Contact ActivityBathroom "Bathroom Activity [MAP(activity.map):%s]" <present> (Activity)
+Contact ActivityKitchen "Kitchen Activity [MAP(activity.map):%s]" <present> (Activity)
+/* DateTime of the last Activity */
+DateTime		LastActivityDate			"Last Activity: [%1$tA, %1$td.%1$tm.%1$tY %1$tT]"	<calendar>
+
+/* Flags */
+Group Flag "Flags"
+Switch flag_hallway (Flag)
+Switch flag_bedroom1 (Flag)
+Switch flag_bedroom2 (Flag)
+Switch flag_bathroom (Flag)
+Switch flag_kitchen (Flag)
+
+/* Temperature */
+Group Weather_Chart													(Weather)
+Number Weather_Temperature 		"Outside Temperature [%.1f °C]"	<temperature> (Weather_Chart) { http="<[http://weather.yahooapis.com/forecastrss?w=12770733&u=c:60000:XSLT(yahoo_weather_temperature.xsl)]" }
+Number Weather_Temp_Max 		"Todays Maximum [%.1f °C]"	<temperature> (Weather_Chart)
+Number Weather_Temp_Min 		"Todays Minimum [%.1f °C]"	<temperature> (Weather_Chart)
+Number Weather_Chart_Period		"Chart Period"
+DateTime Weather_LastUpdate		"Last Update [%1$ta %1$tR]"	<clock>
+
+/* Datetime */
+DateTime		Date			"Date [%1$tA, %1$td.%1$tm.%1$tY]"	<calendar>	{ ntp="America/Atlanta:en_US" }
+
+/**Arduino Coordinator **/
+String ArduinoCoordinator "Arduino Coordinator Reads [%s]" {serial="/dev/ttyACM0"}
+
+/* Bedroom1 */
+/**Zwave **/
+/***Light Switches***/
+Switch LBedroom1            "Light Bedroom 1"   <light> (Zwave,Bedroom1,Lights) {zwave="10:command=switch_binary"}
+/***4in1 Multisensors***/
+Number	Temp_Bedroom1	"Bedroom 1 temperature: [%.1f F]"	<temperature> (Zwave,Bedroom1,Temperature)		{ zwave="15:0:command=sensor_multilevel,sensor_type=1" }
+Number	Humid_Sensor_Bedroom1	"Bedroom 1 Relative humidity: [%.0f %%]"	<water>	(Zwave,Bedroom1) { zwave="15:0:command=sensor_multilevel,sensor_type=5" }
+Number	Lumin_Sensor_Bedroom1	"Bedroom 1 Luminance: [%.0f Lux]"	<sun>	(Zwave,Bedroom1)		{ zwave="15:0:command=sensor_multilevel,sensor_type=3" }
+Number	Battery_Sensor_Bedroom1	"Bedroom 1 Sensor Battery: [%d %%]"	<cistern> (Zwave,OPENedroom1)		{ zwave="15:command=battery" }
+Contact	Motion_Sensor_Bedroom1	"Bedroom 1 Motion Sensor [MAP(motion.map):%s]"	(Zwave,Bedroom1,ActivityBR1) { zwave="15:0:command=sensor_binary,respond_to_basic=true" }
+/*** Door Sensor ****/
+Contact	Door_Sensor_Bedroom1	"Door Sensor Bedroom 1 [MAP(en.map):%s]"	(Zwave,Bedroom1,ActivityBR1) { zwave="27:0:command=sensor_binary,respond_to_basic=true" }
+Contact LastDoorBedroom1Value 
+/**Arduino Sensors **/
+/***TV Sensor ****/
+/*String STV_Arduino_Bedroom1 "TV Value: [%s]" (Slave)
+Contact CTV_Arduino_Bedroom1 "TV Sensor: [MAP(motion.map):%s]" (Arduino,Bedroom1,ActivityBR1)*/
+/***Pressure Sensor ***/
+String SPressure_Arduino_Bedroom1 "Pressure Value Bedroom 1: [%s]" (Slave)
+Contact CPressure_Arduino_Bedroom1 "Pressure Sensor Bathroom/Bedroom 1: [MAP(motion.map):%s]" (Arduino,Bedroom1,ActivityBR1)
+/***LedDoor ***/
+//--> look down to bedroom2
+
+
+/* Bedroom2 */
+/**Zwave **/
+/***Light Switches***/
+Switch LBedroom2            "Light Bedroom 2"   <light> (Zwave,Bedroom2,Lights) {zwave="17:command=switch_binary"}
+/***4in1 Multisensors***/
+Number	Temp_Bedroom2	"Bedroom 2 temperature: [%.1f F]"	<temperature> (Zwave,Bedroom2,Temperature)		{ zwave="19:0:command=sensor_multilevel,sensor_type=1" }
+Number	Humid_Sensor_Bedroom2	"Bedroom 2 Relative humidity: [%.0f %%]"	<water>	(Zwave,Bedroom2) { zwave="19:0:command=sensor_multilevel,sensor_type=5" }
+Number	Lumin_Sensor_Bedroom2	"Bedroom 2 Luminance: [%.0f Lux]"	<sun>	(Zwave,Bedroom2)		{ zwave="19:0:command=sensor_multilevel,sensor_type=3" }
+Number	Battery_Sensor_Bedroom2	"Bedroom 2 Sensor Battery: [%d %%]"	<cistern> (Zwave,Bedroom2)		{ zwave="19:command=battery" }
+Contact	Motion_Sensor_Bedroom2	"Bedroom 2 Motion Sensor [MAP(motion.map):%s]"	(Zwave,Bedroom2,ActivityBR2) { zwave="19:0:command=sensor_binary,respond_to_basic=true" }
+/*** Door Sensor ****/
+Contact	Door_Sensor_Bedroom2	"Door Sensor Bedroom 2 [MAP(en.map):%s]"	(Zwave,Bedroom2,ActivityBR2) { zwave="28:0:command=sensor_binary,respond_to_basic=true" }
+Contact LastDoorBedroom2Value
+/**Arduino Sensors **/
+/***Pressure Sensor ***/
+/*String SPressure_Arduino_Bedroom2 "Pressure Value Bedroom 2: [%s]" (Slave)
+Contact CPressure_Arduino_Bedroom2 "Pressure Sensor Bedroom 2: [MAP(motion.map):%s]" (Arduino,Bedroom2,ActivityBR2)*/
+/***LedDoor ***/
+String SLedDoor_Arduino_Bedroom2 "Led Door Value Bedroom 2: [%s]" (Slave)
+Contact CLedDoor_Arduino_Bedroom2 "Led Door Sensor Bedroom 2: [MAP(motion.map):%s]" (Arduino,Hallway,Bedroom1,ActivityBR1)
+
+String SLedDoor_Arduino_Bedroom1 "Led Door Value Bedroom 1: [%s]" (Slave)
+Contact CLedDoor_Arduino_Bedroom1 "Led Door Sensor Bedroom 1: [MAP(motion.map):%s]" (Arduino,Hallway,Bedroom2,ActivityBR2)
+
+
+/* Hallway */
+/**Zwave **/
+/***Light Switches***/
+Switch LHallway            "Light Hallway"   <light> (Zwave,Hallway,Lights) {zwave="21:command=switch_binary"}
+/***4in1 Multisensors***/
+Number	Temp_Hallway	"Hallway temperature: [%.1f F]"	<temperature> (Zwave,Hallway,Temperature)		{ zwave="20:0:command=sensor_multilevel,sensor_type=1" }
+Number	Humid_Sensor_Hallway	"Hallway Relative humidity: [%.0f %%]"	<water>	(Zwave,Hallway) { zwave="20:0:command=sensor_multilevel,sensor_type=5" }
+Number	Lumin_Sensor_Hallway	"Hallway Luminance: [%.0f Lux]"	<sun>	(Zwave,Hallway)		{ zwave="20:0:command=sensor_multilevel,sensor_type=3" }
+Number	Battery_Sensor_Hallway	"Hallway Sensor Battery: [%d %%]"	<cistern> (Zwave,Hallway)		{ zwave="20:command=battery" }
+Contact	Motion_Sensor_Hallway	"Hallway Motion Sensor [MAP(motion.map):%s]"	(Zwave,Hallway,ActivityH) { zwave="20:0:command=sensor_binary,respond_to_basic=true" }
+/**Arduino Sensors **/
+/***Pressure Sensor ***/
+String SPressure_Arduino_Hallway "Pressure Value Hallway: [%s]" (Slave)
+Contact CPressure_Arduino_Hallway "Pressure Sensor Hallway: [MAP(motion.map):%s]" (Arduino,Hallway,ActivityH)
+
+/* BathRoom */
+/**Zwave **/
+/***Light Switches***/
+//Switch LBathroom            "Light Bathroom"   <light> (Zwave,Bathroom,Lights) {zwave="17:command=switch_binary"}
+/***4in1 Multisensors***/
+/*Number	Temp_Bathroom	"Bathroom temperature: [%.1f F]"	<temperature> (Zwave,Bathroom,Temperature)		{ zwave="19:0:command=sensor_multilevel,sensor_type=1" }
+Number	Humid_Sensor_Bathroom "Bathroom Relative humidity: [%.0f %%]"	<water>	(Zwave,Bathroom) { zwave="19:0:command=sensor_multilevel,sensor_type=5" }
+Number	Lumin_Sensor_Bathroom	"Bathroom Luminance: [%.0f Lux]"	<sun>	(Zwave,Bathroom)		{ zwave="19:0:command=sensor_multilevel,sensor_type=3" }
+Number	Battery_Sensor_Bathroom	"Bathroom Sensor Battery: [%d %%]"	<cistern> (Zwave,Bathroom)		{ zwave="19:command=battery" }
+Contact	Motion_Sensor_Bathroom	"Bathroom Motion Sensor [MAP(motion.map):%s]"	(Zwave,Bathroom,ActivityBath) { zwave="19:0:command=sensor_binary,respond_to_basic=true" }*/
+/*** Door Sensor ****/
+//Contact	Door_Sensor_Bathroom "Door Sensor Bathroom [MAP(en.map):%s]"	(Zwave,Bathroom,ActivityBath) { zwave="14:0:command=sensor_binary,respond_to_basic=true" }
+/**Arduino Sensors **/
+/***Pressure Sensor ***/
+/*String SPressure_Arduino_Kitchen "Pressure Value Kitchen: [%s]" (Slave)
+Contact CPressure_Arduino_Kitchen "Pressure Sensor Kitchen: [MAP(motion.map):%s]" (Arduino,Kitchen,ActivityKitchen)*/
+/***Ultrasonic ***/
+String SUltrasonic_Arduino_Bathroom "Range Finder Value Bathroom: [%s]" (Slave)
+Contact CUltrasonic_Arduino_Bathroom "Ultrasonic range finder sensor Bathroom: [MAP(motion.map):%s]" (Arduino,Bathroom,ActivityBath)
+
+/* Kitchen */
+Contact	Door_Sensor_Kitchen_Ref "Door Sensor Kitchen Ref [MAP(en.map):%s]"	(Zwave,Kitchen,ActivityKitchen) { zwave="26:0:command=sensor_binary,respond_to_basic=true" }
+Contact LastDoorKitchenValue
+/***Pressure Sensor ***/
+String SPressure_Arduino_Kitchen "Pressure Value Kitchen: [%s]" (Slave)
+Contact CPressure_Arduino_Kitchen "Pressure Sensor Kitchen: [MAP(motion.map):%s]" (Arduino,Kitchen,ActivityKitchen)
